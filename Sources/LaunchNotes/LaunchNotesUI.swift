@@ -73,8 +73,12 @@ public struct LaunchNotesView: View {
 
 public extension View {
     /// Presents the model's pending launch note as a sheet using the built-in `LaunchNotesView`.
-    func launchNotes(_ model: LaunchNotesModel, accent: Color = .accentColor) -> some View {
-        modifier(LaunchNotesModifier(model: model) { note, dismiss in
+    ///
+    /// `autoRefresh` (default `true`) recomputes the pending note when this view appears — convenient for
+    /// simple apps. Pass `false` when the host must control *when* the note can appear (e.g. only after
+    /// onboarding, so it never presents over an onboarding flow) and call `model.refresh()` yourself.
+    func launchNotes(_ model: LaunchNotesModel, accent: Color = .accentColor, autoRefresh: Bool = true) -> some View {
+        modifier(LaunchNotesModifier(model: model, autoRefresh: autoRefresh) { note, dismiss in
             LaunchNotesView(note: note, accent: accent, onDismiss: dismiss)
         })
     }
@@ -83,19 +87,21 @@ public extension View {
     /// design system. The closure receives the note and a `dismiss` action to call when done.
     func launchNotes<SheetContent: View>(
         _ model: LaunchNotesModel,
+        autoRefresh: Bool = true,
         @ViewBuilder content: @escaping (LaunchNote, @escaping () -> Void) -> SheetContent
     ) -> some View {
-        modifier(LaunchNotesModifier(model: model, content: content))
+        modifier(LaunchNotesModifier(model: model, autoRefresh: autoRefresh, content: content))
     }
 }
 
 private struct LaunchNotesModifier<SheetContent: View>: ViewModifier {
     @ObservedObject var model: LaunchNotesModel
+    let autoRefresh: Bool
     let content: (LaunchNote, @escaping () -> Void) -> SheetContent
 
     func body(content base: Content) -> some View {
         base
-            .onAppear { model.refresh() }
+            .onAppear { if autoRefresh { model.refresh() } }
             .sheet(item: Binding(
                 get: { model.pendingNote },
                 set: { newValue in if newValue == nil { model.acknowledge() } }
