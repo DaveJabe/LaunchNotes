@@ -58,6 +58,7 @@ struct LaunchNotesModelTests {
         var version: String?
         func lastSeenVersion() -> String? { version }
         func setLastSeenVersion(_ version: String) { self.version = version }
+        func clearLastSeenVersion() { version = nil }
     }
 
     private let v2 = LaunchNote(version: "2.0", title: "Two", highlights: [])
@@ -89,5 +90,17 @@ struct LaunchNotesModelTests {
         model.acknowledge()
         #expect(storage.version == "2.0")
         #expect(model.pendingNote == nil)
+    }
+
+    @Test("resetSeenVersion forgets the seen version so refresh presents again (debug/preview)")
+    func resetSeenVersionRepresents() {
+        let storage = MemoryStorage()
+        let model = LaunchNotesModel(notes: [v2], currentVersion: "2.0", storage: storage)
+        model.markCaughtUp()
+        #expect(storage.version == "2.0")
+        model.resetSeenVersion()
+        #expect(storage.version == nil)
+        model.refresh()
+        #expect(model.pendingNote == v2)
     }
 }

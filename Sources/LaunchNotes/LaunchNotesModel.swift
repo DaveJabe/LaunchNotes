@@ -51,6 +51,13 @@ public final class LaunchNotesModel: ObservableObject {
         pendingNote = nil
     }
 
+    /// Forget the recorded "seen" version so the notes present again on the next `refresh()`/launch — for
+    /// previews and debug menus. Does not present anything itself.
+    public func resetSeenVersion() {
+        storage.clearLastSeenVersion()
+        pendingNote = nil
+    }
+
     /// The app's marketing version (`CFBundleShortVersionString`), or "0" if unavailable. `nonisolated`
     /// so it's usable as the `init` default argument (default args evaluate in a nonisolated context).
     public nonisolated static func bundleShortVersion() -> String {

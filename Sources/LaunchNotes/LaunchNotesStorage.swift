@@ -5,6 +5,9 @@ import Foundation
 public protocol LaunchNotesStorage {
     func lastSeenVersion() -> String?
     func setLastSeenVersion(_ version: String)
+    /// Forget the recorded version so the notes present again on the next `refresh()`/launch — for
+    /// previews and debug menus.
+    func clearLastSeenVersion()
 }
 
 /// The default `UserDefaults`-backed storage. Uses a single string key; override it to isolate the value
@@ -20,4 +23,5 @@ public struct UserDefaultsLaunchNotesStorage: LaunchNotesStorage {
 
     public func lastSeenVersion() -> String? { defaults.string(forKey: key) }
     public func setLastSeenVersion(_ version: String) { defaults.set(version, forKey: key) }
+    public func clearLastSeenVersion() { defaults.removeObject(forKey: key) }
 }
